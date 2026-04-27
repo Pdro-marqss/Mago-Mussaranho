@@ -1,0 +1,29 @@
+# --- Binários e Pastas de Build ---
+# Ignora a pasta de build que você mencionou
+dodge_master_build/
+mago_mussaranho_build/
+# Ignora qualquer executável .exe na raiz (caso você compile fora da pasta)
+*.exe
+# Ignora arquivos de depuração/símbolos do Windows
+*.pdb
+
+# --- Dados do Jogo ---
+# O save.dat não deve ir para o Git, pois cada jogador terá o seu próprio recorde
+save.dat
+
+# --- Scripts de Automação ---
+# O build.bat GERALMENTE deve ir para o Git! 
+# Ele ajuda outras pessoas a saberem como compilar seu jogo. 
+# Mas se você quiser ignorá-lo por algum motivo pessoal, descomente a linha abaixo:
+# build.bat
+
+# --- Arquivos do Sistema e Editores ---
+# .vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+Thumbs.db
+.DS_Store

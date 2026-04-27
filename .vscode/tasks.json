@@ -1,0 +1,22 @@
+{
+    // Configs para criar atalho de build do jogo (ctrl + shift + b)
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "RUN_ODIN_TEST_BUILD",
+            "type": "shell",
+            "command": "odin run src",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "focus": true,
+            }
+        },
+        {
+            "label": "RUN_ODIN_RELEASE_BUILD",
+            "type": "shell",
+            "command": "odin build src -out:dodge_master.exe -o:speed -subsystem:windows",
+            "group": "build",
+        }
+    ]
+}
