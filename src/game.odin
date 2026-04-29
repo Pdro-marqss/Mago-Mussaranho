@@ -30,7 +30,8 @@ SessionData :: struct {
     intro_fade_timer: f32,
     ready_to_show: bool,
     ready_to_show_timer: f32,
-    initial_logos_index: int
+    initial_logos_index: int,
+    debug_mode: bool
 }
 
 Player :: struct {
@@ -121,6 +122,7 @@ init_game :: proc() {
         current_spawn_rate = 0.6,
         current_enemy_speed = 350.0,
         intro_fade_timer = INTRO_FADE_DURATION,
+        debug_mode = false,
     }
 
 
@@ -174,6 +176,12 @@ update_game :: proc(dt: f32) {
             session_game_data.game_time += dt
             session_game_data.enemy_spawn_timer += dt
         
+            // debug mode
+            if raylib.IsKeyPressed(.F3) {
+                session_game_data.debug_mode = !session_game_data.debug_mode
+                fmt.printf("Debug Mode: %v\n", session_game_data.debug_mode)
+            }
+
             // Player movement
             player.is_running = false
 
@@ -412,7 +420,16 @@ draw_game :: proc() {
 
             origin := raylib.Vector2{ dest_rec.width / 2, dest_rec.height / 2 }
             raylib.DrawTexturePro(active_tex, source_rec, dest_rec, origin, 0, raylib.WHITE)
-            raylib.DrawCircleLinesV(player.pos, player.radius, raylib.LIME)
+
+            if session_game_data.debug_mode {
+                raylib.DrawCircleLinesV(player.pos, player.radius, raylib.LIME)
+
+                for enemy in enemies {
+                    raylib.DrawCircleLinesV(enemy.pos, enemy.radius, raylib.RED)
+                }
+
+                raylib.DrawCircle(i32(session_game_data.center_zone.pos.x), i32(session_game_data.center_zone.pos.y), 5, raylib.YELLOW)
+            }
         }
         
         // Draw Enemies
