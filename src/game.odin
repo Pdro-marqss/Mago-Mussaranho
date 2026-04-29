@@ -31,7 +31,8 @@ SessionData :: struct {
     ready_to_show: bool,
     ready_to_show_timer: f32,
     initial_logos_index: int,
-    debug_mode: bool
+    debug_mode: bool,
+    enemy_texture: raylib.Texture2D,
 }
 
 Player :: struct {
@@ -49,7 +50,10 @@ Player :: struct {
 Enemy :: struct {
     pos: raylib.Vector2,
     vel: raylib.Vector2,
-    radius: f32
+    width: f32,
+    height: f32,
+    frame_timer: f32,
+    current_frame: int,
 }
 
 ConquestZone :: struct {
@@ -123,7 +127,10 @@ init_game :: proc() {
         current_enemy_speed = 350.0,
         intro_fade_timer = INTRO_FADE_DURATION,
         debug_mode = false,
+        enemy_texture = raylib.LoadTexture("assets/sprites/FireSpellsEffects.png")
     }
+
+    raylib.SetTextureFilter(session_game_data.enemy_texture, .POINT)
 
 
     // Alocando na memória um espaço para o array dinamico de inimigos caso seja a primeira vez rodando o jogo
@@ -263,7 +270,22 @@ update_game :: proc(dt: f32) {
                 for &enemy in enemies {
                     enemy.pos += enemy.vel * dt
             
-                    if raylib.CheckCollisionCircles(player.pos, player.radius, enemy.pos, enemy.radius) {
+                    // Fire Animation frame control
+                    enemy.frame_timer += dt
+                    fire_animation_velocity:f32 = 0.1
+                    if enemy.frame_timer >= fire_animation_velocity {
+                        enemy.frame_timer = 0
+                        enemy.current_frame = (enemy.current_frame + 1) % 6 // runs between 0 - 5
+                    }
+
+                    fire_hitbox: raylib.Rectangle = raylib.Rectangle {
+                        x = enemy.pos.x - (enemy.width / 2),
+                        y = enemy.pos.y - (enemy.height / 2),
+                        width = enemy.width,
+                        height = enemy.height,
+                    }
+
+                    if raylib.CheckCollisionCircleRec(player.pos, player.radius, fire_hitbox) {
                         session_game_data.deaths += 1
                         
                         if session_game_data.score > session_game_data.high_score {
@@ -278,7 +300,8 @@ update_game :: proc(dt: f32) {
                 // Spawn
                 if session_game_data.enemy_spawn_timer > session_game_data.current_spawn_rate {
                     new_enemy: Enemy
-                    new_enemy.radius = 10.0
+                    new_enemy.width = 40.0
+                    new_enemy.height = 20.0
         
                     spawn_corner_side := raylib.GetRandomValue(0, 3)
                     switch spawn_corner_side {
@@ -424,10 +447,6 @@ draw_game :: proc() {
             if session_game_data.debug_mode {
                 raylib.DrawCircleLinesV(player.pos, player.radius, raylib.LIME)
 
-                for enemy in enemies {
-                    raylib.DrawCircleLinesV(enemy.pos, enemy.radius, raylib.RED)
-                }
-
                 raylib.DrawCircle(i32(session_game_data.center_zone.pos.x), i32(session_game_data.center_zone.pos.y), 5, raylib.YELLOW)
             }
         }
@@ -435,7 +454,49 @@ draw_game :: proc() {
         // Draw Enemies
         {
             for enemy in enemies {
-                raylib.DrawCircleV(enemy.pos, enemy.radius, raylib.RED)
+                COLS :: 9
+                ROWS :: 30
+                FIREBALL_ROW :: 8.0
+
+                text_w: f32 = f32(session_game_data.enemy_texture.width)
+                text_h: f32 = f32(session_game_data.enemy_texture.height)
+
+                frame_w: f32 = text_w / COLS
+                frame_h: f32 = text_h / ROWS
+
+                fireball_angle := raylib.Vector2Angle({ 1, 0 }, enemy.vel) * raylib.RAD2DEG
+
+                source_rec: raylib.Rectangle = raylib.Rectangle {
+                    x = f32(enemy.current_frame) * frame_w,
+                    y = FIREBALL_ROW * frame_h,
+                    width = frame_w,
+                    height = frame_h
+                }
+
+                sprite_scale: f32 = 2.0
+                dest_rec: raylib.Rectangle = raylib.Rectangle {
+                    x = enemy.pos.x,
+                    y = enemy.pos.y,
+                    width = frame_w * sprite_scale,
+                    height = frame_h * sprite_scale
+                }
+
+                origin: raylib.Vector2 = raylib.Vector2{ dest_rec.width / 2, dest_rec.height / 2 }
+
+                raylib.DrawTexturePro(session_game_data.enemy_texture, source_rec, dest_rec, origin, fireball_angle, raylib.WHITE)
+            
+                // Debug fireball
+                if session_game_data.debug_mode {
+                    debug_rect: raylib.Rectangle = raylib.Rectangle {
+                        x = enemy.pos.x - (enemy.width / 2),
+                        y = enemy.pos.y - (enemy.height / 2),
+                        width = enemy.width,
+                        height = enemy.height
+                    }
+
+                    raylib.DrawRectangleLinesEx(debug_rect, 1.0, raylib.RED)
+                    raylib.DrawPixelV(enemy.pos, raylib.YELLOW)
+                }
             }
         }
     
@@ -540,6 +601,13 @@ load_highscore :: proc() -> f32 {
 
 deinit_game :: proc() {
     // liberar memória aqui
-    delete(enemies)
+    raylib.UnloadTexture(player.texture_idle)
+    raylib.UnloadTexture(player.texture_run)
+    raylib.UnloadTexture(session_game_data.enemy_texture)
+
+    if enemies != nil do delete(enemies)
+
     enemies = nil
+
+    fmt.println("Memória limpa com sucesso. Até logo, Mago!")
 }
