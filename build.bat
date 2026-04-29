@@ -5,7 +5,7 @@ echo Compilando Dodge Master...
 if not exist "dist" mkdir "dist"
 
 :: Compila o jogo
-odin build src -out:dist/dodge_master.exe -o:speed -subsystem:windows
+odin build src -out:dist/mago_musaranho.exe -o:speed -subsystem:windows
 
 :: Copia a DLL da Raylib para a pasta de build automaticamente
 :: (Ajuste o caminho abaixo para onde o seu Odin esta instalado)

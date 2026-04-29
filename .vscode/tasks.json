@@ -15,7 +15,7 @@
         {
             "label": "RUN_ODIN_RELEASE_BUILD",
             "type": "shell",
-            "command": "odin build src -out:dodge_master.exe -o:speed -subsystem:windows",
+            "command": "odin build src -out:mago_musaranho.exe -o:speed -subsystem:windows",
             "group": "build",
         }
     ]
