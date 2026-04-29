@@ -36,7 +36,13 @@ SessionData :: struct {
 Player :: struct {
     pos: raylib.Vector2,
     speed: f32,
-    radius: f32
+    radius: f32,
+    texture_idle: raylib.Texture2D,
+    texture_run: raylib.Texture2D,
+    current_frame: int,
+    frame_timer: f32,
+    is_running: bool,
+    facing_right: bool
 }
 
 Enemy :: struct {
@@ -91,7 +97,13 @@ init_game :: proc() {
     player = Player{
         pos = {screen_width / 2, screen_height / 2},
         speed = 600.0,
-        radius = 20.0,
+        radius = 30.0,
+        texture_idle = raylib.LoadTexture("assets/sprites/MouseIdle.png"),
+        texture_run = raylib.LoadTexture("assets/sprites/MouseRun.png"),
+        current_frame = 0,
+        frame_timer = 0,
+        is_running = false,
+        facing_right = true
     }
 
     // Default Game Session configs
@@ -163,11 +175,42 @@ update_game :: proc(dt: f32) {
             session_game_data.enemy_spawn_timer += dt
         
             // Player movement
+            player.is_running = false
+
             {
-                if raylib.IsKeyDown(.W) || raylib.IsKeyDown(.UP) do player.pos.y -= player.speed * dt
-                if raylib.IsKeyDown(.S) || raylib.IsKeyDown(.DOWN) do player.pos.y += player.speed * dt
-                if raylib.IsKeyDown(.A) || raylib.IsKeyDown(.LEFT) do player.pos.x -= player.speed * dt
-                if raylib.IsKeyDown(.D) || raylib.IsKeyDown(.RIGHT) do player.pos.x += player.speed * dt
+                if raylib.IsKeyDown(.W) || raylib.IsKeyDown(.UP) {
+                    player.pos.y -= player.speed * dt
+                    player.is_running = true
+                } 
+                if raylib.IsKeyDown(.S) || raylib.IsKeyDown(.DOWN) {
+                    player.pos.y += player.speed * dt
+                    player.is_running = true
+                } 
+                if raylib.IsKeyDown(.A) || raylib.IsKeyDown(.LEFT) {
+                    player.pos.x -= player.speed * dt
+                    player.is_running = true
+                    player.facing_right = false
+                } 
+                if raylib.IsKeyDown(.D) || raylib.IsKeyDown(.RIGHT) {
+                    player.pos.x += player.speed * dt
+                    player.is_running = true
+                    player.facing_right = true
+                } 
+            }
+
+            //player frame control (sprite animation)
+            {
+                player.frame_timer += dt
+                animation_velocity: f32 = 0.1
+                animation_max_frames: int = 6
+
+                if player.frame_timer >= animation_velocity {
+                    player.frame_timer = 0
+                    player.current_frame += 1
+                    if player.current_frame >= animation_max_frames {
+                        player.current_frame = 0
+                    } 
+                }
             }
         
             // Secury that player canot get out of the screen bounds
@@ -344,7 +387,32 @@ draw_game :: proc() {
     
         // Draw Player
         {
-            raylib.DrawCircleV(player.pos, player.radius, raylib.WHITE)
+            // raylib.DrawCircleV(player.pos, player.radius, raylib.WHITE)
+            active_tex := player.is_running ? player.texture_run : player.texture_idle
+            frame_height := f32(active_tex.height) / 6
+            source_rec := raylib.Rectangle {
+                x = 0,
+                y = f32(player.current_frame) * frame_height,
+                width = f32(active_tex.width),
+                height = frame_height
+            }
+
+            if !player.facing_right {
+                source_rec.width *= -1
+            }
+
+            sprite_scale:f32 = 6.0
+
+            dest_rec := raylib.Rectangle {
+                x = player.pos.x,
+                y = player.pos.y,
+                width = f32(active_tex.width) * sprite_scale,
+                height = frame_height * sprite_scale
+            }
+
+            origin := raylib.Vector2{ dest_rec.width / 2, dest_rec.height / 2 }
+            raylib.DrawTexturePro(active_tex, source_rec, dest_rec, origin, 0, raylib.WHITE)
+            raylib.DrawCircleLinesV(player.pos, player.radius, raylib.LIME)
         }
         
         // Draw Enemies
