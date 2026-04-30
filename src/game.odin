@@ -7,6 +7,7 @@ import "vendor:raylib"
 import "core:fmt"
 import "core:os"
 import "core:strconv"
+import "core:math"
 
 
 GameState :: enum {
@@ -464,7 +465,8 @@ draw_game :: proc() {
                 frame_w: f32 = text_w / COLS
                 frame_h: f32 = text_h / ROWS
 
-                fireball_angle := raylib.Vector2Angle({ 1, 0 }, enemy.vel) * raylib.RAD2DEG
+                angle_rad := math.atan2(enemy.vel.y, enemy.vel.x)
+                fireball_angle := angle_rad * raylib.RAD2DEG
 
                 source_rec: raylib.Rectangle = raylib.Rectangle {
                     x = f32(enemy.current_frame) * frame_w,
