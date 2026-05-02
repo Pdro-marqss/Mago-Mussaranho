@@ -279,14 +279,18 @@ update_game :: proc(dt: f32) {
                         enemy.current_frame = (enemy.current_frame + 1) % 6 // runs between 0 - 5
                     }
 
-                    fire_hitbox: raylib.Rectangle = raylib.Rectangle {
-                        x = enemy.pos.x - (enemy.width / 2),
-                        y = enemy.pos.y - (enemy.height / 2),
-                        width = enemy.width,
-                        height = enemy.height,
-                    }
+                    // fire_hitbox: raylib.Rectangle = raylib.Rectangle {
+                    //     x = enemy.pos.x - (enemy.width / 2),
+                    //     y = enemy.pos.y - (enemy.height / 2),
+                    //     width = enemy.width,
+                    //     height = enemy.height,
+                    // }
 
-                    if raylib.CheckCollisionCircleRec(player.pos, player.radius, fire_hitbox) {
+                    direction := raylib.Vector2Normalize(enemy.vel)
+                    hitbox_center:[2]f32 = enemy.pos + (direction * 15.0)
+                    hitbox_radius: f32 = 12.0
+
+                    if raylib.CheckCollisionCircles(player.pos, player.radius, hitbox_center, hitbox_radius) {
                         session_game_data.deaths += 1
                         
                         if session_game_data.score > session_game_data.high_score {
@@ -489,14 +493,10 @@ draw_game :: proc() {
             
                 // Debug fireball
                 if session_game_data.debug_mode {
-                    debug_rect: raylib.Rectangle = raylib.Rectangle {
-                        x = enemy.pos.x - (enemy.width / 2),
-                        y = enemy.pos.y - (enemy.height / 2),
-                        width = enemy.width,
-                        height = enemy.height
-                    }
+                    direction := raylib.Vector2Normalize(enemy.vel)
+                    hitbox_center := enemy.pos + (direction * 15.0)
 
-                    raylib.DrawRectangleLinesEx(debug_rect, 1.0, raylib.RED)
+                    raylib.DrawCircleLinesV(hitbox_center, 12.0, raylib.BLUE)
                     raylib.DrawPixelV(enemy.pos, raylib.YELLOW)
                 }
             }
