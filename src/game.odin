@@ -181,6 +181,8 @@ update_game :: proc(dt: f32) {
             screen_width: f32 = f32(raylib.GetScreenWidth())
             screen_height: f32 = f32(raylib.GetScreenHeight())
         
+            if raylib.IsKeyPressed(.ESCAPE) do game_state = .Paused
+
             session_game_data.game_time += dt
             session_game_data.enemy_spawn_timer += dt
         
@@ -344,6 +346,11 @@ update_game :: proc(dt: f32) {
                     session_game_data.points_fade_text_alpha = session_game_data.points_fade_text_timer / 1.0
                 }
             }
+        } else if game_state == .Paused {
+            if raylib.IsKeyPressed(.ESCAPE) do game_state = .Playing
+            if raylib.IsKeyPressed(.C) do game_state = .Playing
+            if raylib.IsKeyPressed(.Q) do raylib.CloseWindow()
+            return
         }
     }
 }
@@ -358,6 +365,26 @@ draw_game :: proc() {
 
     // Draw MainMenu screen
     {
+        if game_state == .Paused {
+            raylib.DrawRectangle(0, 0, i32(screen_width), i32(screen_height), raylib.Fade(raylib.BLACK, 0.5))
+
+            paused_text: cstring= fmt.ctprint("JOGO PAUSADO")
+            paused_text_font_size: i32 = 60
+            paused_text_width: i32 = raylib.MeasureText(paused_text, paused_text_font_size)
+            raylib.DrawText(paused_text, i32(screen_width) / 2 - paused_text_width / 2, i32(screen_height) / 2 - 130, paused_text_font_size, raylib.WHITE)
+
+            continue_text: cstring= fmt.ctprint("[C] CONTINUAR")
+            continue_text_font_size: i32 = 30
+            continue_text_width: i32 = raylib.MeasureText(continue_text, continue_text_font_size)
+            raylib.DrawText(continue_text, i32(screen_width) / 2 - continue_text_width / 2, i32(screen_height) / 2, continue_text_font_size, raylib.LIGHTGRAY)
+
+            quit_text: cstring= fmt.ctprint("[Q] SAIR DO JOGO")
+            quit_text_font_size: i32 = 30
+            quit_text_width: i32 = raylib.MeasureText(quit_text, quit_text_font_size)
+            raylib.DrawText(quit_text, i32(screen_width) / 2 - quit_text_width / 2, i32(screen_height) / 2 + 50, quit_text_font_size, raylib.LIGHTGRAY)
+
+        }
+
         if game_state == .Main_Menu {
             if !session_game_data.ready_to_show {
                 raylib.ClearBackground(raylib.BLACK)
@@ -375,6 +402,8 @@ draw_game :: proc() {
                 raylib.DrawText(mussaranho_logo_text, i32(screen_width / 2) - mussaranho_logo_text_width / 2, i32(screen_height / 2), mussaranho_logo_text_font_size, raylib.WHITE)
             } else {
                 raylib.ClearBackground(raylib.DARKBLUE)
+
+                if raylib.IsKeyPressed(.ESCAPE) do raylib.CloseWindow()
             
                 // Game Title
                 title_text := "MAGO MUSSARANHO"
@@ -391,7 +420,7 @@ draw_game :: proc() {
                 }
 
                 exit_text: cstring = fmt.ctprintf("Pressione ESC para sair")
-                exit_text_font_size: i32 = 15
+                exit_text_font_size: i32 = 18
                 exit_text_width: i32 = raylib.MeasureText(exit_text, exit_text_font_size)
                 raylib.DrawText(exit_text, i32(screen_width) / 2 - exit_text_width / 2, i32(screen_height) / 2 + 100, exit_text_font_size, raylib.LIGHTGRAY)
 

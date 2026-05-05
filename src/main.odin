@@ -20,6 +20,8 @@ main :: proc() {
 
     init_game()
 
+    raylib.SetExitKey(.KEY_NULL);
+
     for !raylib.WindowShouldClose() {
         dt := raylib.GetFrameTime()
         update_game(dt)
